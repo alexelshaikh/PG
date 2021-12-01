@@ -15,14 +15,26 @@ public class BasicDNARules extends DNARulesCollection {
     public static final float MAX_GC_CONTENT = 0.55f;
 
 
+    /**
+     * Creates an instance with the basic DNA rules
+     */
     public BasicDNARules() {
         this(false);
     }
 
+    /**
+     * Creates an instance with the basic DNA rules
+     * @param withDG true to use the dg server.
+     */
     public BasicDNARules(boolean withDG) {
         this(withDG, SecondaryStructureRule.DEFAULT_TEMP);
     }
 
+    /**
+     * Creates an instance with the basic DNA rules
+     * @param withDG true to use the dg server.
+     * @param temp the temperature for the dg server.
+     */
     public BasicDNARules(boolean withDG, float temp) {
         super();
         addOrReplaceRule("GC Error", this::gcError);

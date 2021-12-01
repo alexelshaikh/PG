@@ -8,14 +8,14 @@ public class SecondaryStructureRule implements DNARule {
     private final float temp;
     private final DGClient client;
 
+    /**
+     * Creates an instance that checks the error via the dg server.
+     * @param temp the temperature.
+     */
     public SecondaryStructureRule(float temp) {
         super();
         this.temp = temp;
         this.client = DGClient.getInstance();
-    }
-
-    public SecondaryStructureRule() {
-        this(DEFAULT_TEMP);
     }
 
     @Override

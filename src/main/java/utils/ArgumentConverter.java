@@ -6,15 +6,22 @@ public class ArgumentConverter<T>  {
     private final Function<String, T> func;
     private final T orElse;
 
+    /**
+     * Creates an instance used to parse a single input parameter from the console.
+     * @param func the function that converts the read string from the console to the desired data type.
+     * @param orElse the default value used if the conversion fails.
+     */
     public ArgumentConverter(Function<String, T> func, T orElse) {
         this.func = func;
         this.orElse = orElse;
     }
 
-    public ArgumentConverter(Function<String, T> func) {
-        this(func, null);
-    }
 
+    /**
+     * Converts a read parameter to the desired data type.
+     * @param s the parameter's value.
+     * @return the converted value.
+     */
     public T convert(String s) {
         try {
             return func.apply(s);

@@ -7,10 +7,19 @@ public class PseudoPermutation {
     private final long a; // random; 1 <= a <= p - 1
     private final long b; // random; 1 <= b <= p - 1
 
+    /**
+     * Creates a PseudoPermutation instance. This is an approximation for a real permutation, and is used to accelerate LSH.
+     * @param m the largest index for this instance to permute. For example, if you want to permute a 100 elements vector, m would be 100.
+     */
     public PseudoPermutation(long m) {
         this(m,  m);
     }
 
+    /**
+     * Creates a PseudoPermutation instance. This is an approximation for a real permutation, and is used to accelerate LSH.
+     * @param m largest index for this instance to permute. For example, if you want to permute a 100 elements vector, m would be 100.
+     * @param p_1 must be greater than or equal to m. This LSH will use the next prime number greater than p_1.
+     */
     public PseudoPermutation(long m, long p_1) {
         if (p_1 < m)
             throw new RuntimeException("p must be >= m");
@@ -34,6 +43,9 @@ public class PseudoPermutation {
         return p;
     }
 
+    /**
+     * @return the permuted index of x.
+     */
     public long apply(long x) {
         long y = ((a * x + b) % p) % m;
         while (y < 0L)

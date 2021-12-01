@@ -1,5 +1,8 @@
 package utils.fasta;
 
+/**
+ * The super class of reading and writing fasta files.
+ */
 public abstract class FASTAFile implements AutoCloseable {
     protected final static String CAPTION_PREFIX = ">";
     protected final static int CAPTION_START_INDEX = CAPTION_PREFIX.length();

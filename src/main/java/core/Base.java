@@ -2,12 +2,18 @@ package core;
 
 import utils.FuncUtils;
 
+/**
+ * The Enum that represents a DNA base.
+ */
 public enum Base {
     A,
     T,
     C,
     G;
 
+    /**
+     * @return the complement for the given DNA base.
+     */
     public Base complement() {
         return switch (this) {
             case A  -> T;
@@ -17,6 +23,10 @@ public enum Base {
         };
     }
 
+    /**
+     * @param c the character that is parsed to a DNA base.
+     * @return the DNA base for c.
+     */
     public static Base valueOfChar(char c) {
         return switch (c) {
             case 'A' -> A;
@@ -31,6 +41,9 @@ public enum Base {
         return Character.forDigit(this.ordinal(), 4);
     }
 
+    /**
+     * @return a random DNA base.
+     */
     public static Base random() {
         double rand = Math.random();
         if (rand <= 0.25)
@@ -43,6 +56,10 @@ public enum Base {
         return Base.G;
     }
 
+    /**
+     * @param gcContent the probability of returning a G or C.
+     * @return a DNA base. The probability of returning a G or C is gcContent.
+     */
     public static Base randomGC(double gcContent) {
         double rand = Math.random();
         double gs = gcContent / 2d;
@@ -57,6 +74,10 @@ public enum Base {
         return Base.T;
     }
 
+    /**
+     * @param bs an array of DNA bases.
+     * @return a random DNA base selected from bs.
+     */
     public static Base random(Base... bs) {
         return FuncUtils.random(bs);
     }

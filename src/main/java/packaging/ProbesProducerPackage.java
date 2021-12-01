@@ -117,6 +117,9 @@ public class ProbesProducerPackage {
 
     private static ExecutorService pool;
 
+    /**
+     * The main function that starts the encoding process. This is the class that is executed when running the executable .jar file.
+     */
     public static void main(String[] args) throws Exception {
         ArgumentParser argParser = new ArgumentParser(args);
         count = argParser.getParam(COUNT_PARAM, ArgumentConverter.INT(DEFAULT_COUNT));

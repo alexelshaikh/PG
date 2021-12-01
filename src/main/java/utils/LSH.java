@@ -38,14 +38,10 @@ public class LSH {
         this.bandLocks = Stream.generate(ReentrantReadWriteLock::new).limit(b).toArray(ReadWriteLock[]::new);
     }
 
-    public void insert(Iterable<BaseSequence> it) {
-        it.forEach(this::insert);
-    }
-
-    public void insertParallel(Iterable<BaseSequence> it) {
-        FuncUtils.stream(it).parallel().forEach(this::insert);
-    }
-
+    /**
+     * Insertsa given BaseSequence into this LSH instance.
+     * @param seq the BaseSequence to insert.
+     */
     public void insert(BaseSequence seq) {
         var sigs = signatures(seq);
         Lock lock;
@@ -58,6 +54,9 @@ public class LSH {
         }
     }
 
+    /**
+     * @return the minHash values for the given BaseSequence.
+     */
     public long[] minHashes(BaseSequence seq) {
         List<BaseSequence> kmers = seq.kmers(k);
         int size = kmers.size();
@@ -87,10 +86,19 @@ public class LSH {
     }
 
 
+    /**
+     * @param seq the input BaseSequence.
+     * @return the set of similar BaseSequence this LSH instance matches for the input BaseSequence.
+     */
     public Set<BaseSequence> similarSeqs(BaseSequence seq) {
         return similarSeqs(seq, Integer.MAX_VALUE);
     }
 
+    /**
+     * @param seq the input BaseSequence.
+     * @param maxCount the maximum number of matches. If maxCount matches are found, this method returns and does not search for more matches.
+     * @return the set of similar BaseSequence this LSH instance matches for the input BaseSequence. It will return maxCount matches at most.
+     */
     public Set<BaseSequence> similarSeqs(BaseSequence seq, int maxCount) {
         var sigs = signatures(seq);
         Set<BaseSequence> result = new HashSet<>();
@@ -112,7 +120,10 @@ public class LSH {
         }
         return result;
     }
-
+    /**
+     * @param seq the input BaseSequence.
+     * @return the signatures of each band for the input BaseSequence.
+     */
     public String[] signatures(BaseSequence seq) {
         var minHashes = minHashes(seq);
         String[] sigs = new String[b];

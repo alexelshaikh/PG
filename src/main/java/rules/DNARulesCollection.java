@@ -10,6 +10,9 @@ public class DNARulesCollection implements DNARule {
     private int noNameRuleCounter;
     protected Map<String, DNARule> rules;
 
+    /**
+     * Creates a collection of DNARule that can be added, replaced, and removed.
+     */
     public DNARulesCollection() {
         this.rules = new HashMap<>();
         this.noNameRuleCounter = 0;

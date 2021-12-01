@@ -18,6 +18,9 @@ public final class DGClient implements AutoCloseable {
 
     private final ChannelHandler[] handlers;
 
+    /**
+     * @return the DGClient instance used to communicate with the dg server.
+     */
     public synchronized static DGClient getInstance() {
         if (INSTANCE == null)
             INSTANCE = new DGClient(START_PORT, CHANNELS_COUNT);
@@ -31,41 +34,26 @@ public final class DGClient implements AutoCloseable {
             handlers[i] = new ChannelHandler(startPort + i);
     }
 
-    public static void setHost(String host) {
-        DGClient.HOST = host;
-    }
-
-    public static void setStartPort(int startPort) {
-        DGClient.START_PORT = startPort;
-    }
-
-    public static void setChannelsCount(int channelsCount) {
-        DGClient.CHANNELS_COUNT = channelsCount;
-    }
-
-    public boolean isConnected() {
-        for (ChannelHandler ch : handlers) {
-            if (!ch.isConnected())
-                return false;
-        }
-        return false;
-    }
-
-    public int getChannelsCount() {
-        return DGClient.CHANNELS_COUNT;
-    }
-
+    /**
+     * Closed the DGClient instance, i.e., closes all channels.
+     */
     @Override
     public void close() {
         for (ChannelHandler ch : handlers)
             ch.close();
     }
 
+    /**
+     * Calculates the dg energy by sending a BaseSequence and a temperature to the dg server.
+     * @param seq the BaseSequence.
+     * @param temp the temperature.
+     * @return the dg energy computed at the dg server.
+     */
     public float dg(BaseSequence seq, float temp) {
         return dg(0, seq, temp);
     }
 
-    public float dg(int fromSocketNum, BaseSequence seq, float temp) {
+    private float dg(int fromSocketNum, BaseSequence seq, float temp) {
         int safeId = fromSocketNum % this.handlers.length;
         ChannelHandler ch;
         while (!(ch=this.handlers[safeId]).lock.tryLock()) {

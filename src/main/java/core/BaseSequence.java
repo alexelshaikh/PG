@@ -1,9 +1,6 @@
 package core;
 
 import utils.Pair;
-import utils.Permutation;
-import utils.fasta.ReadableFASTAFile;
-import utils.fasta.WriteableFASTAFile;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -64,23 +61,42 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
     private List<Base> bases;
     private Map<String, Object> properties;
 
-
+    /**
+     * Creates an empty BaseSequence
+     */
     public BaseSequence() {
         this.bases = new ArrayList<>();
     }
+    /**
+     * Creates a BaseSequence containing a list of provided DNA bases.
+     * @param bases the list of DNA bases that will be added to this instance.
+     */
     public BaseSequence(List<Base> bases) {
         this.bases = bases;
     }
+
+    /**
+     * Creates a BaseSequence containing the bases provided in the string.
+     * @param seq the string of DNA bases that will be parsed and added to this instance.
+     */
     public BaseSequence(String seq) {
         this();
         append(seq);
     }
+    /**
+     * Creates a BaseSequence containing the DNA sequences provided.
+     * @param seqs the array of BaseSequence that will be each added into this instance.
+     */
     public BaseSequence(BaseSequence... seqs) {
         this();
         for (BaseSequence seq : seqs) {
             append(seq);
         }
     }
+    /**
+     * Creates a BaseSequence containing an array of provided DNA bases.
+     * @param bases the array of DNA bases that will be added to this instance.
+     */
     public BaseSequence(Base... bases) {
         this();
         for (Base b : bases) {
@@ -88,45 +104,63 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         }
     }
 
+    /**
+     * Inserts a base at the specified index.
+     * @param index the index where the base will be inserted.
+     * @param b the base that will be inserted.
+     */
     public void insert(int index, Base b) {
         this.bases.add(index, b);
     }
 
+    /**
+     * Inserts a BaseSequence at the specified index.
+     * @param index the index where the BaseSequence will be inserted.
+     * @param seq the base that will be inserted.
+     */
     public void insert(int index, BaseSequence seq) {
         this.bases.addAll(index, seq.bases);
     }
 
+
+    /**
+     * Appends a character representing a DNA base to this instance.
+     * @param b the character representing a DNA base.
+     */
     public void append(char b) {
         this.bases.add(Base.valueOfChar(b));
     }
+
+    /**
+     * Appends a DNA base to this instance.
+     * @param b the DNA base.
+     */
     public void append(Base b) {
         this.bases.add(b);
     }
+    /**
+     * Appends a BaseSequence to this instance.
+     * @param seq the BaseSequence.
+     */
     public void append(BaseSequence seq) {
         this.bases.addAll(seq.bases);
     }
+
+    /**
+     * Appends a CharSequence representing a DNA sequence to this instance.
+     * @param charSequence the CharSequence representing a DNA sequence.
+     */
     public void append(CharSequence charSequence) {
         int len = charSequence.length();
         for(int i = 0; i < len; i++)
             append(charSequence.charAt(i));
     }
 
-    public void set(int index, Base b) {
-        this.bases.set(index, b);
-    }
-
-    public void setRange(int i, int j, Base b) {
-        for (int k = i; k < j; k++) {
-            this.bases.set(k, b);
-        }
-    }
-
-    public void setRange(int i, int j, BaseSequence seq) {
-        for (int k = i; k < j; k++) {
-            this.bases.set(k, seq.get(k - i));
-        }
-    }
-
+    /**
+     * Puts a property to this instance.
+     * @param propertyName the property name.
+     * @param value the property's value.
+     */
     public <T> BaseSequence putProperty(String propertyName, T value) {
         if (properties == null)
             properties = new HashMap<>();
@@ -134,10 +168,19 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return this;
     }
 
+    /**
+     * @param propertyName the property name.
+     * @return the value of the given property.
+     */
     public <T> T getProperty(String propertyName) {
         return getProperty(propertyName, () -> null);
     }
 
+    /**
+     * @param propertyName the property name.
+     * @param orElse is the given property does not exist, will return this instead.
+     * @return the value of the given property. If no value exists, returns orElse instead.
+     */
     public <T> T getProperty(String propertyName, Supplier<T> orElse) {
         if (properties == null)
             return orElse.get();
@@ -146,6 +189,10 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return t != null? t : orElse.get();
     }
 
+    /**
+     * @param len the k-mer length.
+     * @return the list of k-mers (can contain duplicates).
+     */
     public List<BaseSequence> kmers(int len) {
         int thisLen = length();
         if (len > thisLen)
@@ -159,6 +206,10 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return qGrams;
     }
 
+    /**
+     * @param len the k-mer length.
+     * @return the set of k-mers (cannot contain duplicates).
+     */
     public Set<BaseSequence> kmersSet(int len) {
         int thisLen = length();
         if (len > thisLen)
@@ -172,201 +223,45 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return qGrams;
     }
 
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
 
+    /**
+     * @return the number of DNA bases in this instance.
+     */
     public int length() {
         return this.bases.size();
     }
 
-    public BaseSequence replace(BaseSequence source, BaseSequence target) {
-        return clone().replaceInPlace(source, target);
-    }
-
-
-    public BaseSequence replaceInPlace(BaseSequence source, BaseSequence target) {
-        int index = Collections.indexOfSubList(bases, source.bases);
-        if (index >= 0) {
-            BaseSequence before = index == 0? new BaseSequence() : window(0, index);
-            BaseSequence after = window(index + source.length());
-            List<Base> basesReplaced = new ArrayList<>(before.length() + target.length() + after.length());
-            basesReplaced.addAll(before.bases);
-            basesReplaced.addAll(target.bases);
-            basesReplaced.addAll(after.bases);
-            this.bases = basesReplaced;
-        }
-        return this;
-    }
-
-
-    public BaseSequence[] splitRegex(String regex) {
-        String[] splitted = this.toString().split(regex);
-        BaseSequence[] seqs = new BaseSequence[splitted.length];
-        for (int i = 0; i < splitted.length; i++) {
-            seqs[i] = new BaseSequence(splitted[i]);
-        }
-        return seqs;
-    }
-
-    public BaseSequence[] splitInHalves(int numHalves) {
-        int lenThis = length();
-        int len = lenThis / numHalves;
-        if (len == 0)
-            throw new RuntimeException("too many halves to split this BaseSequence!");
-        BaseSequence[] seqs = new BaseSequence[numHalves];
-        int start = 0;
-        for (int i = 0, end = len; i < numHalves; i++, start = end, end += len)
-            seqs[i] = subSequence(start, end);
-
-
-        if (start < lenThis) {
-            seqs[numHalves - 1] = subSequence(start - len, lenThis);
-        }
-        return seqs;
-    }
-
-    public BaseSequence[] splitEvery(int n) {
-        int length = length();
-        if (n > length)
-            return new BaseSequence[] {this};
-
-        BaseSequence[] split = new BaseSequence[(int) Math.ceil((double) length / n)];
-        int i = 0;
-        int start = 0;
-        for (int end = n; end <= length;) {
-            split[i++] = subSequence(start, end);
-            start = end;
-            end += n;
-        }
-        if (split[split.length - 1] == null)
-            split[split.length - 1] = subSequence(start, length);
-
-        return split;
-    }
-
-    public BaseSequence reverse() {
-        List<Base> reversed = new ArrayList<>(bases.size());
-        ListIterator<Base> it = bases.listIterator(bases.size());
-        while(it.hasPrevious())
-            reversed.add(it.previous());
-        return new BaseSequence(reversed);
-    }
-
-    public BaseSequence[] split(BaseSequence seq) {
-        return splitToList(seq).toArray(new BaseSequence[0]);
-    }
-
-    public List<BaseSequence> splitToList(BaseSequence seq) {
-        List<BaseSequence> seqs = new ArrayList<>();
-        int lenSeq = seq.length();
-        int len = length();
-        int hitIndex = Collections.indexOfSubList(bases, seq.bases);
-        int nextStartPos = 0;
-        int nextEndPos;
-        while (hitIndex >= 0) {
-            nextEndPos = nextStartPos + hitIndex;
-            if (nextEndPos != 0)
-                seqs.add(subSequence(nextStartPos, nextEndPos));
-            nextStartPos += hitIndex + lenSeq;
-            if (nextStartPos >= len)
-                break;
-
-            hitIndex = Collections.indexOfSubList(bases.subList(nextStartPos, len), seq.bases);
-
-        }
-        if (nextStartPos < len)
-            seqs.add(subSequence(nextStartPos, len));
-
-        return seqs;
-    }
-
-    public int lastIndexOf(BaseSequence seq) {
-        return Collections.lastIndexOfSubList(this.bases, seq.bases);
-    }
-    public int indexOf(BaseSequence seq) {
-        return Collections.indexOfSubList(this.bases, seq.bases);
-    }
-
-    public static BaseSequence join(Iterable<BaseSequence> seqs) {
-        BaseSequence joined = new BaseSequence();
-        for (BaseSequence seq : seqs) {
-            joined.append(seq);
-        }
-        return joined;
-    }
-
-    public static BaseSequence join(Iterable<BaseSequence> seqs, BaseSequence joiner) {
-        BaseSequence joined = new BaseSequence();
-        Iterator<BaseSequence> it = seqs.iterator();
-        if (it.hasNext())
-            joined.append(it.next());
-        while (it.hasNext()) {
-            joined.append(joiner);
-            joined.append(it.next());
-        }
-        return joined;
-    }
-
-
+    /**
+     * @return an Iterator of Base for the DNA bases in this instance.
+     */
     @Override
     public Iterator<Base> iterator() {
         return bases.listIterator();
     }
 
+    /**
+     * @return a stream of Base for the DNA bases in this instance.
+     */
     public Stream<Base> stream() {
         return bases.stream();
     }
 
-    public void swap(int i, int j) {
-        Base bi = this.bases.get(i);
-        this.bases.set(i, this.bases.get(j));
-        this.bases.set(j, bi);
-    }
 
-    public void clear() {
-        this.bases.clear();
-    }
-    public int count(Base base) {
-        return (int) stream().filter(b -> b == base).count();
-    }
-    public int gcCount() {
-        return (int) stream().filter(b -> b == Base.C || b == Base.G).count();
-    }
-
-    public Map<Base, Integer> histogram() {
-        return stream().collect(Collectors.toMap(b -> b, b -> 1, Integer::sum));
-    }
-
-    public BaseSequence subSequence(int i, int j) {
-        return new BaseSequence(new ArrayList<>(this.bases.subList(i, j)));
-    }
-    public BaseSequence subSequence(int i) {
-        return subSequence(i, length());
-    }
-
+    /**
+     * Returns a an immutable subsequence of this instance.
+     * @param i the starting (inclusive) index.
+     * @param j the ending (exclusive) index.
+     * @return the subsequence at indexes [i..j) of this instance.
+     */
     public BaseSequence window(int i, int j) {
         return new BaseSequence(this.bases.subList(i, j));
     }
-    public BaseSequence window(int i) {
-        return new BaseSequence(this.bases.subList(i, length()));
-    }
 
-    public boolean contains(BaseSequence seq) {
-        return Collections.indexOfSubList(this.bases, seq.bases) >= 0;
-    }
-    public boolean contains(BaseSequence seq, int fromIndex) {
-        return window(fromIndex).contains(seq);
-    }
-
-    public boolean contains(String seq) {
-        return contains(new BaseSequence(seq));
-    }
-
-    public BaseSequence complement() {
-        return stream().map(Base::complement).collect(COLLECTOR_BASE);
-    }
-
+    /**
+     * Returns a score for homopolymers in this instance. The higher the score, the longer and more abundant homopolymers are found in this instance.
+     * @param threshold the smallest homopolymer length to search for.
+     * @return the homopolymer score.
+     */
     public int homopolymerScore(int threshold) {
         int[] homopolymerIndexes = indexOfHomopolymersAboveThreshold(threshold);
         int sum = 0;
@@ -378,6 +273,10 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return sum;
     }
 
+    /**
+     * @param threshold the smallest homopolymer length to search for.
+     * @return the indexes of found homopolymers.
+     */
     public int[] indexOfHomopolymersAboveThreshold(int threshold) {
         List<Integer> indexes = new ArrayList<>();
         int startIndex;
@@ -410,38 +309,10 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return indexes.stream().mapToInt(i->i).toArray();
     }
 
-    public int indexOfLongestHomopolymer() {
-        int longest = 1;
-        int startIndex = 0;
-        int currentIndex = 0;
-        int currentStreak = 1;
-        Base lastBase = this.bases.get(0).complement();
-        for (Base currentBase: this.bases) {
-	        boolean stillInHomopolymer = currentBase.equals(lastBase);
-            if (stillInHomopolymer) {
-                currentStreak += 1;
-            }
-            if(currentIndex == this.bases.size() - 1) {
-	            stillInHomopolymer = false;
-	            currentIndex++;
-            }
-
-            if (currentStreak > longest && !stillInHomopolymer) {
-                startIndex = currentIndex - currentStreak;
-                longest = currentStreak;
-                currentStreak = 0;
-            } else if (!stillInHomopolymer){
-                currentStreak = 0;
-            }
-            currentIndex++;
-            lastBase = currentBase;
-        }
-        if (startIndex < 2)
-            return 1;
-        else
-            return startIndex - 1;
-    }
-
+    /**
+     * @param index the index at which the present homopolymer's length is calculated.
+     * @return the length of the homopolymer starting at index.
+     */
     public int lengthOfHomopolymerAtIndex(int index) {
         Base hpBase = this.bases.get(index);
         int i = 0;
@@ -450,27 +321,21 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return i;
     }
 
-    public BaseSequence permute(Permutation p) {
-        return new BaseSequence(p.apply(this.bases));
-    }
 
-	public BaseSequence permuteInPlace(Permutation p) {
-        p.applyInPlace(this.bases);
-        return this;
-    }
-
+    /**
+     * @return the GC content of this instance.
+     */
 	public float gcContent() {
 		return gcContentOf(bases);
     }
-    public double gcContentAsDouble() {
-        return gcContent();
-    }
-
     private static float gcContentOf(List<Base> list) {
         return (float) list.stream().filter(b -> b == Base.G || b == Base.C).count() / list.size();
     }
 
-
+    /**
+     * @param windowSize the window size of which the GC content is calculated.
+     * @return GC content for each window.
+     */
     public float[] gcContentWindowed(int windowSize) {
         int len = length();
         int windowCount = len/windowSize;
@@ -487,32 +352,11 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return gcs;
     }
 
-    public float gcWindow(int i, int j) {
-        return gcContentOf(bases.subList(i, Math.min(j, length())));
-    }
-
-    public float hammingDistance(BaseSequence seq) {
-        int len = this.length();
-        int thatLen = seq.length();
-        int minLen = Math.min(len, thatLen);
-        float dist = Math.abs(len - thatLen);
-        for (int i = 0; i < minLen; i++) {
-            if (seq.get(i) != get(i)) {
-                dist++;
-            }
-        }
-
-        return dist / Math.max(len, thatLen);
-    }
-
-    public float editDistance(BaseSequence seq) {
-        int maxLen = Math.max(length(), seq.length());
-        return levenshteinDistance(seq, maxLen) / maxLen;
-    }
-    public double editDistanceAsDouble(BaseSequence seq) {
-        return editDistance(seq);
-    }
-
+    /**
+     * @param seq the BaseSequence for which to calculate the Jaccard distance to.
+     * @param qgramLength the k-mers length.
+     * @return the Jaccard distance.
+     */
     public float jaccardDistance(BaseSequence seq, int qgramLength) {
         Set<BaseSequence> s1 = this.kmersSet(qgramLength);
         Set<BaseSequence> s2 = seq.kmersSet(qgramLength);
@@ -523,120 +367,11 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return 1.0f - (float) s1.size() / union.size();
     }
 
-    public static void appendFASTA(String path, BaseSequence seq) {
-        try (WriteableFASTAFile aff = new WriteableFASTAFile(path)) {
-            aff.append(seq);
-        }
-    }
-
-    public static void appendFASTA(String path, Iterable<BaseSequence> seqs) {
-        try (WriteableFASTAFile aff = new WriteableFASTAFile(path)) {
-            aff.append(seqs);
-        }
-    }
-
-    public static List<BaseSequence> readFASTA(String path) {
-        try (ReadableFASTAFile rff = new ReadableFASTAFile(path)) {
-           return rff.readRemainingSeqs();
-        }
-    }
-
-    public static List<ReadableFASTAFile.Entry> readFASTAEntries(String path) {
-        try (ReadableFASTAFile aff = new ReadableFASTAFile(path)) {
-            return aff.readRemaining();
-        }
-    }
-
-    public static void appendFASTA(String path, BaseSequence seq, String caption) {
-        try (WriteableFASTAFile aff = new WriteableFASTAFile(path)) {
-            aff.append(seq, caption);
-        }
-    }
-
-    public BaseSequence removeSubSequence(BaseSequence subSeq) {
-        int startIndex = Collections.indexOfSubList(this.bases, subSeq.bases);
-        BaseSequence result = new BaseSequence();
-        if (startIndex > 0)
-            result.bases.addAll(this.bases.subList(0, startIndex));
-
-        result.bases.addAll(this.bases.subList(startIndex + subSeq.length(), this.bases.size()));
-        return new BaseSequence(result);
-    }
-
-	public void removeBasesAtIndex(int basesCount, int index) {
-    	// Not index + i because list is being modified
-		for (int i = 0; i < basesCount; i++) {
-			this.bases.remove(index);
-		}
-	}
-
-	public int lcs(BaseSequence seq){
-		int m = length();
-        int n = seq.length();
-
-        int max = 0;
-        int[][] dp = new int[m][n];
-
-        for (int i = 0; i < m && m - i > max; i++) {
-            for (int j = 0; j < n && n - j > max; j++) {
-                if (get(i) == seq.get(j)) {
-                    if (i==0 || j==0)
-                        dp[i][j]=1;
-                    else
-                        dp[i][j] = dp[i-1][j-1]+1;
-
-                    if (max < dp[i][j])
-                        max = dp[i][j];
-                }
-            }
-        }
-        return max;
-    }
-
-    public int lcsWithGaps(BaseSequence seq) {
-        int seqLen = seq.length();
-        int len = length();
-        int[][] dp = new int[len + 1][seqLen + 1];
-        for (int i = 1; i < dp.length; i++) {
-            for (int j = 1; j < dp[0].length; j++) {
-                if (get(i - 1) == seq.get(j - 1)) {
-                    dp[i][j] = 1 + dp[i - 1][j - 1];
-                } else {
-                    dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                }
-            }
-        }
-        return dp[len][seqLen];
-    }
-
-    public double tm() {
-        if (length() <= 14)
-            return basicTm();
-        return nearestNeighborsTm();
-    }
-
-    private double basicTm() {
-        Map<Base, Integer> histogram = histogram();
-        return 2 * (histogram.get(Base.A) + histogram.get(Base.T)) + 4 * (histogram.get(Base.C) + histogram.get(Base.G)) - 7;
-    }
-
-    private double nearestNeighborsTm() {
-        int len = length();
-        double sumDeltaH = 0d;
-        double sumDeltaS = 0d;
-        for (int i = 1; i < len; i++) {
-            BaseSequence seq = window(i - 1, i + 1);
-            Pair<Double, Double> hs = DELTA_H_S__5_TO_3.get(seq);
-            if (hs == null)
-                hs = DELTA_H_S__5_TO_3.get(seq.complement().reverse());
-
-            sumDeltaH += hs.getT1();
-            sumDeltaS += hs.getT2();
-        }
-
-        return sumDeltaH / (A_PLUS_R_MULTI_LN_C_QUARTER + sumDeltaS) + ZERO_KELVIN_IN_CELSIUS + FACTOR_LOG_NA_PLUS_CONCENTRATION;
-    }
-
+    /**
+     * @param slice the BaseSequence.
+     * @param consecutive if set true, then only consecutive repeats of slice will be counted.
+     * @return the count of slice in this instance.
+     */
     public int countMatches(BaseSequence slice, boolean consecutive) {
         int lenThis = length();
         int sliceLen = slice.length();
@@ -666,72 +401,19 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return consecutive? maxConsecutiveCount : count;
     }
 
-
-    public boolean isEmpty() {
-        return this.bases.isEmpty();
-    }
-
-    private float levenshteinDistance(BaseSequence seq, int limit) {
-        int len = length();
-        int seqLen = seq.length();
-        if (len == 0)
-            return seqLen;
-        if (seqLen == 0)
-            return len;
-
-        int[] v0 = new int[seqLen + 1];
-        int[] v1 = new int[seqLen + 1];
-        int[] vtemp;
-
-        for (int i = 0; i < v0.length; i++)
-            v0[i] = i;
-
-        for (int i = 0; i < len; i++) {
-            v1[0] = i + 1;
-            int minv1 = v1[0];
-            for (int j = 0; j < seqLen; j++) {
-                int cost = 1;
-                if (get(i) == seq.get(j)) {
-                    cost = 0;
-                }
-                v1[j + 1] = Math.min(v1[j] + 1, Math.min(v0[j + 1] + 1, v0[j] + cost));
-                minv1 = Math.min(minv1, v1[j + 1]);
-            }
-
-            if (minv1 >= limit)
-                return limit;
-            vtemp = v0;
-            v0 = v1;
-            v1 = vtemp;
-        }
-
-        return v0[seqLen];
-    }
-
-    public int longestHomopolymer() {
-        int longest = 1;
-        int current = 1;
-        int len = length();
-        for (int i = 1; i < len; i++) {
-            if (get(i) == get(i - 1)) {
-                current++;
-            }
-            else {
-                longest = Math.max(longest, current);
-                current = 1;
-            }
-        }
-        return Math.max(longest, current);
-    }
-
+    /**
+     * @param i the index.
+     * @return the DNA base at the specified index.
+     */
     public Base get(int i) {
         return this.bases.get(i);
     }
 
-    public List<Base> getBases() {
-        return bases;
-    }
-
+    /**
+     * Checks if this instance is equal to o.
+     * @param o the other object.
+     * @return true, if o and this instance contains the same DNA bases in the same order.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -746,28 +428,36 @@ public class BaseSequence implements Iterable<Base>, Cloneable {
         return this.bases.equals(((BaseSequence) o).bases);
     }
 
+    /**
+     * @return a hash value for this instance.
+     */
     @Override
     public int hashCode() {
         return this.bases.hashCode();
     }
 
+    /**
+     * Generates a random BaseSequence with lgiven length and GC content.
+     * @param len the length of the returned BaseSequence.
+     * @param gcContent the target GC content.
+     * @return the random BaseSequence.
+     */
     public static BaseSequence random(int len, double gcContent) {
         return new BaseSequence(Stream.generate(() -> Base.randomGC(gcContent)).limit(len).collect(Collectors.toList()));
     }
 
-    public static BaseSequence random(int len) {
-        return random(len, 0.5);
-    }
-
-    public static BaseSequence random() {
-        return random((int) (50.0d + Math.random() * 151.0d), 0.5);
-    }
-
+    /**
+     * Converts the BaseSequence to a string representing the DNA bases.
+     * @return a string representation of this instance.
+     */
     @Override
     public String toString() {
         return stream().map(Base::name).collect(Collectors.joining());
     }
 
+    /**
+     * @return a copy of this instance.
+     */
     @Override
     public BaseSequence clone() {
         return new BaseSequence(this);

@@ -16,19 +16,34 @@ public class ReadableFASTAFile extends FASTAFile implements Iterable<ReadableFAS
 
     private final BufferedReader br;
 
+    /**
+     * Creates a buffered handler for reading from a fasta file.
+     * @param path the path to the fasta file.
+     * @param buffSize the size of the buffer that is used to read in the file.
+     */
     public ReadableFASTAFile(String path, int buffSize) {
         super(path);
         this.br = FuncUtils.safeCall(() -> new BufferedReader(new FileReader(path), buffSize));
     }
 
+    /**
+     * Creates a buffered handler for reading from a fasta file.
+     * @param path the path to the fasta file.
+     */
     public ReadableFASTAFile(String path) {
         this(path, DEFAULT_BUFF_SIZE);
     }
 
+    /**
+     * @return true if there is more to read.
+     */
     public boolean available() {
         return FuncUtils.safeCall(this.br::ready);
     }
 
+    /**
+     * @return an Entry object that contains the read DNA sequence along with its caption.
+     */
     public Entry read() {
         String captionLine = FuncUtils.safeCall(this.br::readLine);
         if (captionLine == null) {
@@ -42,6 +57,9 @@ public class ReadableFASTAFile extends FASTAFile implements Iterable<ReadableFAS
         return Entry.of(captionLine, seqLine);
     }
 
+    /**
+     * @return the remaining sequences in the file as a list of Entry.
+     */
     public List<Entry> readRemaining() {
         List<Entry> list = new ArrayList<>();
         Entry e = read();
@@ -54,18 +72,30 @@ public class ReadableFASTAFile extends FASTAFile implements Iterable<ReadableFAS
         return list;
     }
 
+    /**
+     * @return the next read sequence in the file.
+     */
     public BaseSequence readSeq() {
         return read().getSeq();
     }
 
+    /**
+     * @return the remaining sequences in the file as a list of BaseSequence.
+     */
     public List<BaseSequence> readRemainingSeqs() {
         return readRemaining().stream().map(Entry::getSeq).collect(Collectors.toList());
     }
 
+    /**
+     * @return a stream representing the fasta sequences as Entry objects.
+     */
     public Stream<Entry> stream() {
         return FuncUtils.stream(this);
     }
 
+    /**
+     * @return an iterable of BaseSequence of the fasta sequences.
+     */
     public Iterable<BaseSequence> asSeqIterable() {
         return () -> new Iterator<>() {
             final Iterator<Entry> it = iterator();
@@ -102,9 +132,15 @@ public class ReadableFASTAFile extends FASTAFile implements Iterable<ReadableFAS
         private Entry(String caption, BaseSequence seq) {
             super(caption, seq);
         }
+        /**
+         * @return the caption of the given Entry object.
+         */
         public String getCaption() {
             return super.t1;
         }
+        /**
+         * @return the DNA sequence of the given Entry object.
+         */
         public BaseSequence getSeq() {
             return super.t2;
         }
